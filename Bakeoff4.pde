@@ -22,6 +22,7 @@ int startTime = 0; // time starts when the first click is captured
 int finishTime = 0; //records the time of the final click
 boolean userDone = false;
 int countDownTimerWait = 0;
+boolean phase1 = true;
 
 void setup() {
  // size(800, 800); //you can change this to be fullscreen
@@ -76,28 +77,29 @@ void draw() {
   }
 
 //code to draw four target dots in a grid
-  for (int i=0; i<4; i++)
-  {
-    pushMatrix();
-    translate(width/2, height/2);
-    rotate(radians(i*90));
-    translate(150,0); 
-    
-    if (targets.get(index).target==i) // colorize target
-      fill(0, 255, 0);
-    else
-      fill(180, 180, 180);
-      
-    ellipse(0,0, 100, 100);
-    popMatrix();
+  if (phase1) {
+    // first box (top)
+    if (targets.get(index).target==1) fill(0, 255, 0);
+    else fill(180, 180, 180);
+    rect(width/2, height-(4.0/5.0)*height, width*(3.0/4.0), width*(4.0/5.0));
+    // second box (right)
+    if (targets.get(index).target==2) fill(0, 255, 0);
+    else fill(180, 180, 180);
+    rect(width-(4.0/5.0)*width, height/3.0, width/6.0, height/3.0);
+    // third box (bottom)
+    if (targets.get(index).target==3) fill(0, 255, 0);
+    else fill(180, 180, 180);
+    rect(width/2, height-(1.0/5.0)*height, width*(3.0/4.0), width*(4.0/5.0));
+    // fourth box (left)
+    if (targets.get(index).target==4) fill(0, 255, 0);
+    else fill(180, 180, 180);
+    rect(width-(1.0/5.0)*width, height/3.0, width/6.0, height/3.0);
+  } else {
+    // phase 2
+    triangle(0,height,0,height/9.0,width/5.0,height);
+    triangle(width,height,width,height/9.0,width*(4.0/5.0),height);
   }
 
-  if (light>proxSensorThreshold)
-    fill(180, 0, 0);
-  else
-    fill(255, 0, 0);
-    
-  pushMatrix();
   translate(width/2,height/2);
   rotate(radians(angleCursor));
   rect(140,0, 50, 50);
@@ -135,21 +137,6 @@ int hitTest()
      return 3;
   else
     return -1;
-}
-
-//use gyro (rotation) to update angle
-void onGyroscopeEvent(float x, float y, float z)
-{
-  if (light>proxSensorThreshold) //only update angle cursor if light is low / prox sensor covered
-    angleCursor -= z*3; //cented to window and scaled
-    if (angleCursor<0)
-      angleCursor+=360; //never go below 0, keep it within 0-360
-    angleCursor %= 360; //mod by 360 to keep it within 0-360
-}
-
-void onLightEvent(float v) //this just updates the light value
-{
-  light = v; //update global variable
 }
 
 void onAccelerometerEvent(float x, float y, float z)
