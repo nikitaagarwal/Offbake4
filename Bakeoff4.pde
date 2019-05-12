@@ -23,7 +23,8 @@ int finishTime = 0; //records the time of the final click
 boolean userDone = false;
 int countDownTimerWait = 0;
 boolean phase1 = true;
-float end_result = 0;
+float end_result = 1.0;
+boolean waiting=true;
 boolean ERROR_HAPPENED = false;
 void setup() {
  // size(800, 800); //you can change this to be fullscreen
@@ -79,6 +80,7 @@ void draw() {
 
 //code to draw four target dots in a grid
   if (phase1) {
+    System.out.println("drawing phase1");
     // first box (top)
     if (targets.get(index).target==0) fill(0, 255, 0);
     else fill(180, 180, 180);
@@ -95,66 +97,81 @@ void draw() {
     if (targets.get(index).target==3) fill(0, 255, 0);
     else fill(180, 180, 180);
     rect(0, height/2.0, width/3.0, height/2.0);
-  } else {
+  }
+  
+  if (!phase1) {
     // phase 2
-    
-    if (targets.get(index).action==0){
+    System.out.println("Drawing phase2");
+    if (targets.get(index).action==0){  // PRESS DOWN
       fill(0, 255, 0);
     } else {
       fill(180, 180, 180);
     }
     rect(width/2, height/3.0, width*(3.0/4.0), height*(1.0/5.0));
+    //fill(0);
+    //text("press down", width/2+20, height/3.0+20);
     
-    if (targets.get(index).action==1){
+    if (targets.get(index).action==1){ // DONT PRESS
       fill(0, 255, 0);
     } else {
       fill(180, 180, 180);
     }
     rect(width/2, height/3*2, width*(3.0/4.0), height*(1.0/5.0));
-    
-    waitFunction();
+    //fill(0);
+    //text("do nothing", width/2+20, height/3*2+20);
+
   }
+  
   
   fill(255);//white
   text("Trial " + (index+1) + " of " +trialCount, width/2, 50);
-  text("Target #" + (targets.get(index).target), width/2, 100);
+  //text("Target #" + (targets.get(index).target), width/2, 100);
  
 }
+
+//void update() {
+//  System.out.println("calling");
+//  waitFunction();
+//}
 
 
 void onAccelerometerEvent(float accelerometerX, float accelerometerY, float accelerometerZ)
 {
+  
   if (phase1) {
+    ERROR_HAPPENED = false;
+    System.out.println("onAccelEvent");
     if (userDone || trialIndex>=targets.size()) return;
     Target t = targets.get(trialIndex);
     if (t==null) return;
     
-    if (accelerometerX  >= 5 && targets.get(trialIndex).target==3) {phase1=false; }//left
-    else if (accelerometerX  <= -5 && targets.get(trialIndex).target==1) {phase1=false; } //right
-    else if (accelerometerY  >= 4 && targets.get(trialIndex).target==2) {phase1=false; } //bottom
-    else if (accelerometerY  <= -4 && targets.get(trialIndex).target==0) {phase1=false; } //top
-    else if (accelerometerX  >= 5 && targets.get(trialIndex).target!=3) {phase1=false; ERROR_HAPPENED=true;}//wrong left
-    else if (accelerometerX  <= -5 && targets.get(trialIndex).target!=1) {phase1=false; ERROR_HAPPENED=true;} //wrong right
-    else if (accelerometerY  >= 4 && targets.get(trialIndex).target!=2) {phase1=false; ERROR_HAPPENED=true;} //wrong bottom
-    else if (accelerometerY  <= -4 && targets.get(trialIndex).target!=0) {phase1=false; ERROR_HAPPENED=true;} // wrong top
-    //phase1=false;
+    if (accelerometerX  >= 5 && targets.get(trialIndex).target==3) {System.out.println("1"); phase1=false; thread("waitFunction"); }//left
+    else if (accelerometerX  <= -5 && targets.get(trialIndex).target==1) {System.out.println("2"); phase1=false; thread("waitFunction"); } //right
+    else if (accelerometerY  >= 4 && targets.get(trialIndex).target==2) {System.out.println("3"); phase1=false; thread("waitFunction"); } //bottom
+    else if (accelerometerY  <= -4 && targets.get(trialIndex).target==0) {System.out.println("4"); phase1=false; thread("waitFunction"); } //top
+    else if (accelerometerX  >= 5 && targets.get(trialIndex).target!=3) {System.out.println("5"); phase1=false; ERROR_HAPPENED=true; thread("waitFunction"); }//wrong left
+    else if (accelerometerX  <= -5 && targets.get(trialIndex).target!=1) {System.out.println("6"); phase1=false; ERROR_HAPPENED=true; thread("waitFunction"); } //wrong right
+    else if (accelerometerY  >= 4 && targets.get(trialIndex).target!=2) {System.out.println("7"); phase1=false; ERROR_HAPPENED=true; thread("waitFunction"); } //wrong bottom
+    else if (accelerometerY  <= -4 && targets.get(trialIndex).target!=0) {System.out.println("8"); phase1=false; ERROR_HAPPENED=true; thread("waitFunction");  }  // wrong top
   }
 }
 
 void waitFunction() {
   if (!phase1) {
-    int start = 0;
-    if (userDone || trialIndex>=targets.size()) return;
-    Target t = targets.get(trialIndex);
-    if (t==null) return;
-    int index = trialIndex;
-    start = millis();
-    int better_be = millis() + 7000;
-    end_result = 0;
     
-    while ( start <= better_be ) {
-      System.out.print("sup");
+    System.out.println("wait function in phase 2");
+    int index = trialIndex;
+    int now = millis(); 
+    int end = millis() + 900;
+    System.out.println("STARTING TO WAIT ");
+    
+    for (now = millis(); now <= end && end_result == 1.0 ; now = millis()) {
+      waiting=true;
+      System.out.println("waiting");
     }
+    waiting=false;
+
+    System.out.println("DONE WAITING");
     
     if (end_result == 1 && targets.get(index).action==0) {
       ERROR_HAPPENED = true;
@@ -163,68 +180,21 @@ void waitFunction() {
     }
     
     if (ERROR_HAPPENED) {
-      if (trialIndex != 0) trialIndex--;
+      if (trialIndex != 0) {phase1=true; trialIndex--; end_result = 1.0;}
+      else {phase1=true; trialIndex = 0; end_result = 1.0;}
     } else {
+      phase1=true;
       trialIndex++;
+      end_result = 1.0;
     }
     
-    phase1=true;
   }
 }
 
-
-    
 void onProximityEvent(float disstance)
 {
-  if (!phase1) {
+  System.out.println("onProxEvent");
+  if (waiting) {
     end_result = disstance;
   }
 }
-
-//void onProximityEvent(float disstance)
-//{
-//  int start = 0;
-//  int done = 0;
-//  end_result = 0;
-  
-  
-//  if (!phase1) {
-//    int index = trialIndex;
-//    if (userDone || trialIndex>=targets.size()) return;
-//    Target t = targets.get(trialIndex);
-//    if (t==null) return;
-    
-//    start = millis();
-//    done = start;
-//    System.out.println("start: " + start);
-//    //System.out.println("done: " + done);
-//    while (   (done-start) <= 700  ) {
-//      if (disstance == 1) {
-//        // NOT ON
-//        //System.out.println("start: " + start);
-//        //System.out.println("done: " + done);
-//        end_result=disstance;
-//        done = millis();
-//      } else {
-//        // ON
-//        end_result=disstance;
-//        done = millis(); 
-//      }
-//    }
-//    System.out.println("done: " + done);
-    
-//    if (end_result == 1 && targets.get(index).action==0) {
-//      ERROR_HAPPENED = true;
-//    } else if (end_result == 0 && targets.get(index).action==1) {
-//      ERROR_HAPPENED = true;
-//    }
-    
-//    if (ERROR_HAPPENED) {
-//      if (trialIndex != 0) trialIndex--;
-//    } else {
-//      trialIndex++;
-//    }
-   
-//    phase1=true;
-//  }
-//}
