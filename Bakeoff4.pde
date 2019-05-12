@@ -79,102 +79,81 @@ void draw() {
 //code to draw four target dots in a grid
   if (phase1) {
     // first box (top)
+    if (targets.get(index).target==0) fill(0, 255, 0);
+    else fill(180, 180, 180);
+    rect(width/2, 0, width*(3.0/4.0), height*(1.0/5.0));
+    // second box (right)
     if (targets.get(index).target==1) fill(0, 255, 0);
     else fill(180, 180, 180);
-    rect(width/2, height-(4.0/5.0)*height, width*(3.0/4.0), width*(4.0/5.0));
-    // second box (right)
+    rect(width, height/2.0, width/3.0, height/2.0);
+    //// third box (bottom)
     if (targets.get(index).target==2) fill(0, 255, 0);
     else fill(180, 180, 180);
-    rect(width-(4.0/5.0)*width, height/3.0, width/6.0, height/3.0);
-    // third box (bottom)
+    rect(width/2, height, width*(3.0/4.0), height*(1.0/5.0));
+    //// fourth box (left)
     if (targets.get(index).target==3) fill(0, 255, 0);
     else fill(180, 180, 180);
-    rect(width/2, height-(1.0/5.0)*height, width*(3.0/4.0), width*(4.0/5.0));
-    // fourth box (left)
-    if (targets.get(index).target==4) fill(0, 255, 0);
-    else fill(180, 180, 180);
-    rect(width-(1.0/5.0)*width, height/3.0, width/6.0, height/3.0);
+    rect(0, height/2.0, width/3.0, height/2.0);
   } else {
     // phase 2
-    triangle(0,height,0,height/9.0,width/5.0,height);
-    triangle(width,height,width,height/9.0,width*(4.0/5.0),height);
+    if (targets.get(index).action==0){
+      fill(0, 255, 0);
+    } else {
+      fill(180, 180, 180);
+    }
+    triangle(0.0, 0.0, 0.0, height/3.0, width/2.5, 0.0); 
+    if (targets.get(index).action==1){
+      fill(0, 255, 0);
+    } else {
+      fill(180, 180, 180);
+    }
+    triangle(width, 0.0, width, height/3.0, width-width/2.5, 0.0);
   }
-
-  translate(width/2,height/2);
-  rotate(radians(angleCursor));
-  rect(140,0, 50, 50);
-  popMatrix();
 
   fill(255);//white
   text("Trial " + (index+1) + " of " +trialCount, width/2, 50);
   //text("Target #" + (targets.get(index).target), width/2, 100);
 
-//only show phase two if the finger is down
-if (light<=proxSensorThreshold)
-{
-  if (targets.get(index).action==0)
-    text("Action: UP", width/2, 150);
-  else
-    text("Action: DOWN", width/2, 150);
-}
-  
-  //debug output only, slows down rendering
-  //text("light level:" + int(light), width/2, height-100);
-  //text("z-axis accel: " + nf(accel,0,1), width/2, height-50); //use this to check z output!
-  //text("touching target #" + hitTest(), width/2, height-150); //use this to check z output!
   
 }
 
-int hitTest()
-{
-  if (angleCursor>330 || angleCursor<30)
-     return 0;
-  else if (angleCursor>60 && angleCursor<120)
-     return 1;
-  else if (angleCursor>150 && angleCursor<210)
-     return 2;
-  else if (angleCursor>240 && angleCursor<300)
-     return 3;
-  else
-    return -1;
-}
 
-void onAccelerometerEvent(float x, float y, float z)
+void onAccelerometerEvent(float accelerometerX, float accelerometerY, float accelerometerZ)
 {
-  accel = z-9.8;//update global variable and subtract gravity (9.8 newtons)
-  
-  if (userDone || trialIndex>=targets.size())
-    return;
+  if (phase1) {
+    if (userDone || trialIndex>=targets.size()) return;
+    Target t = targets.get(trialIndex);
+    if (t==null) return;
     
-  Target t = targets.get(trialIndex);
-
-  if (t==null)
-    return;
-     
-  if (light<=proxSensorThreshold && abs(accel)>4 && countDownTimerWait<0) //possible hit event
-  {
-    if (hitTest()==t.target)//check if it is the right target
-    {
-      if (((accel)>4 && t.action==0) || ((accel)<-4 && t.action==1))
-      {
-        //println("Right target, right z direction!");
-        trialIndex++; //next trial!
-      } 
-      else
-      {
-        if (trialIndex>0)
-          trialIndex--; //move back one trial as penalty!
-        //println("right target, WRONG z direction!");
-      }
-      countDownTimerWait=10; //wait roughly 0.5 sec before allowing next trial
-    } 
-  } 
-  else if (light<=proxSensorThreshold && countDownTimerWait<0 && hitTest()!=t.target)
-  { 
-    //println("wrong round 1 action!"); 
-    if (trialIndex>0)
-      trialIndex--; //move back one trial as penalty!
-
-    countDownTimerWait=10; //wait roughly 0.5 sec before allowing next trial
+    if (accelerometerX  >= 5 && targets.get(trialIndex).target==3) {trialIndex++; phase1=false; }//left
+    else if (accelerometerX  <= -5 && targets.get(trialIndex).target==1) {trialIndex++; phase1=false; } //right
+    else if (accelerometerY  >= 4 && targets.get(trialIndex).target==2) {trialIndex++; phase1=false; } //bottom
+    else if (accelerometerY  <= -4 && targets.get(trialIndex).target==0) {trialIndex++; phase1=false; } //top
+    else if (accelerometerX  >= 5 || accelerometerX  <= -5 || accelerometerY  >= 4 || accelerometerY  <= -4) {
+      if (trialIndex>0) {trialIndex--; phase1=false;}
+    }
+    
   }
 }
+
+//void onAccelerometerEvent(float accelerometerX, float accelerometerY, float accelerometerZ)
+//{
+  
+//  if (phase1) {
+    
+//    if (userDone || trialIndex>=targets.size()) return;
+//    Target t = targets.get(trialIndex);
+//    if (t==null) return;
+    
+//    if (accelerometerX  >= 5 && targets.get(trialIndex).target==4) trialIndex++; //left
+//    else if (accelerometerX  <= -5 && targets.get(trialIndex).target==2) trialIndex++; //right
+//    else if (accelerometerY  >= 4 && targets.get(trialIndex).target==3) trialIndex++; //bottom
+//    else if (accelerometerY  <= -4 && targets.get(trialIndex).target==1) trialIndex++; //top
+//    else if (accelerometerX  >= 5 || accelerometerX  <= -5 || accelerometerY  >= 4 || accelerometerY  <= -4) {
+//      if (trialIndex>0) trialIndex--;
+     
+//    }
+//    //phase1=false;
+//  }
+  
+//}
