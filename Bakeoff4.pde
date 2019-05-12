@@ -111,13 +111,14 @@ void draw() {
       fill(180, 180, 180);
     }
     rect(width/2, height/3*2, width*(3.0/4.0), height*(1.0/5.0));
+    
+    waitFunction();
   }
-
+  
   fill(255);//white
   text("Trial " + (index+1) + " of " +trialCount, width/2, 50);
-  //text("Target #" + (targets.get(index).target), width/2, 100);
-
-  
+  text("Target #" + (targets.get(index).target), width/2, 100);
+ 
 }
 
 
@@ -140,35 +141,19 @@ void onAccelerometerEvent(float accelerometerX, float accelerometerY, float acce
   }
 }
 
-void onProximityEvent(float disstance)
-{
-  int start = 0;
-  int done = 0;
-  end_result = 0;
-  int index = trialIndex;
-  
+void waitFunction() {
   if (!phase1) {
-    
+    int start = 0;
     if (userDone || trialIndex>=targets.size()) return;
     Target t = targets.get(trialIndex);
     if (t==null) return;
-    
+    int index = trialIndex;
     start = millis();
-    done = start;
-    //System.out.println("start: " + start);
-    //System.out.println("done: " + done);
-    while (   (done-start) <= 700  ) {
-      if (disstance == 1) {
-        // NOT ON
-        //System.out.println("start: " + start);
-        //System.out.println("done: " + done);
-        end_result=disstance;
-        done = millis();
-      } else {
-        // ON
-        end_result=disstance;
-        done = millis();
-      }
+    int better_be = millis() + 7000;
+    end_result = 0;
+    
+    while ( start <= better_be ) {
+      System.out.print("sup");
     }
     
     if (end_result == 1 && targets.get(index).action==0) {
@@ -182,7 +167,64 @@ void onProximityEvent(float disstance)
     } else {
       trialIndex++;
     }
-   
+    
     phase1=true;
   }
 }
+
+
+    
+void onProximityEvent(float disstance)
+{
+  if (!phase1) {
+    end_result = disstance;
+  }
+}
+
+//void onProximityEvent(float disstance)
+//{
+//  int start = 0;
+//  int done = 0;
+//  end_result = 0;
+  
+  
+//  if (!phase1) {
+//    int index = trialIndex;
+//    if (userDone || trialIndex>=targets.size()) return;
+//    Target t = targets.get(trialIndex);
+//    if (t==null) return;
+    
+//    start = millis();
+//    done = start;
+//    System.out.println("start: " + start);
+//    //System.out.println("done: " + done);
+//    while (   (done-start) <= 700  ) {
+//      if (disstance == 1) {
+//        // NOT ON
+//        //System.out.println("start: " + start);
+//        //System.out.println("done: " + done);
+//        end_result=disstance;
+//        done = millis();
+//      } else {
+//        // ON
+//        end_result=disstance;
+//        done = millis(); 
+//      }
+//    }
+//    System.out.println("done: " + done);
+    
+//    if (end_result == 1 && targets.get(index).action==0) {
+//      ERROR_HAPPENED = true;
+//    } else if (end_result == 0 && targets.get(index).action==1) {
+//      ERROR_HAPPENED = true;
+//    }
+    
+//    if (ERROR_HAPPENED) {
+//      if (trialIndex != 0) trialIndex--;
+//    } else {
+//      trialIndex++;
+//    }
+   
+//    phase1=true;
+//  }
+//}
