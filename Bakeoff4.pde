@@ -23,7 +23,8 @@ int finishTime = 0; //records the time of the final click
 boolean userDone = false;
 int countDownTimerWait = 0;
 boolean phase1 = true;
-
+float end_result = 0;
+boolean ERROR_HAPPENED = false;
 void setup() {
  // size(800, 800); //you can change this to be fullscreen
   //frameRate(30);
@@ -96,18 +97,20 @@ void draw() {
     rect(0, height/2.0, width/3.0, height/2.0);
   } else {
     // phase 2
+    
     if (targets.get(index).action==0){
       fill(0, 255, 0);
     } else {
       fill(180, 180, 180);
     }
-    triangle(0.0, 0.0, 0.0, height/3.0, width/2.5, 0.0); 
+    rect(width/2, height/3.0, width*(3.0/4.0), height*(1.0/5.0));
+    
     if (targets.get(index).action==1){
       fill(0, 255, 0);
     } else {
       fill(180, 180, 180);
     }
-    triangle(width, 0.0, width, height/3.0, width-width/2.5, 0.0);
+    rect(width/2, height/3*2, width*(3.0/4.0), height*(1.0/5.0));
   }
 
   fill(255);//white
@@ -125,35 +128,61 @@ void onAccelerometerEvent(float accelerometerX, float accelerometerY, float acce
     Target t = targets.get(trialIndex);
     if (t==null) return;
     
-    if (accelerometerX  >= 5 && targets.get(trialIndex).target==3) {trialIndex++; phase1=false; }//left
-    else if (accelerometerX  <= -5 && targets.get(trialIndex).target==1) {trialIndex++; phase1=false; } //right
-    else if (accelerometerY  >= 4 && targets.get(trialIndex).target==2) {trialIndex++; phase1=false; } //bottom
-    else if (accelerometerY  <= -4 && targets.get(trialIndex).target==0) {trialIndex++; phase1=false; } //top
-    else if (accelerometerX  >= 5 || accelerometerX  <= -5 || accelerometerY  >= 4 || accelerometerY  <= -4) {
-      if (trialIndex>0) {trialIndex--; phase1=false;}
-    }
-    
+    if (accelerometerX  >= 5 && targets.get(trialIndex).target==3) {phase1=false; }//left
+    else if (accelerometerX  <= -5 && targets.get(trialIndex).target==1) {phase1=false; } //right
+    else if (accelerometerY  >= 4 && targets.get(trialIndex).target==2) {phase1=false; } //bottom
+    else if (accelerometerY  <= -4 && targets.get(trialIndex).target==0) {phase1=false; } //top
+    else if (accelerometerX  >= 5 && targets.get(trialIndex).target!=3) {phase1=false; ERROR_HAPPENED=true;}//wrong left
+    else if (accelerometerX  <= -5 && targets.get(trialIndex).target!=1) {phase1=false; ERROR_HAPPENED=true;} //wrong right
+    else if (accelerometerY  >= 4 && targets.get(trialIndex).target!=2) {phase1=false; ERROR_HAPPENED=true;} //wrong bottom
+    else if (accelerometerY  <= -4 && targets.get(trialIndex).target!=0) {phase1=false; ERROR_HAPPENED=true;} // wrong top
+    //phase1=false;
   }
 }
 
-//void onAccelerometerEvent(float accelerometerX, float accelerometerY, float accelerometerZ)
-//{
+void onProximityEvent(float disstance)
+{
+  int start = 0;
+  int done = 0;
+  end_result = 0;
+  int index = trialIndex;
   
-//  if (phase1) {
+  if (!phase1) {
     
-//    if (userDone || trialIndex>=targets.size()) return;
-//    Target t = targets.get(trialIndex);
-//    if (t==null) return;
+    if (userDone || trialIndex>=targets.size()) return;
+    Target t = targets.get(trialIndex);
+    if (t==null) return;
     
-//    if (accelerometerX  >= 5 && targets.get(trialIndex).target==4) trialIndex++; //left
-//    else if (accelerometerX  <= -5 && targets.get(trialIndex).target==2) trialIndex++; //right
-//    else if (accelerometerY  >= 4 && targets.get(trialIndex).target==3) trialIndex++; //bottom
-//    else if (accelerometerY  <= -4 && targets.get(trialIndex).target==1) trialIndex++; //top
-//    else if (accelerometerX  >= 5 || accelerometerX  <= -5 || accelerometerY  >= 4 || accelerometerY  <= -4) {
-//      if (trialIndex>0) trialIndex--;
-     
-//    }
-//    //phase1=false;
-//  }
-  
-//}
+    start = millis();
+    done = start;
+    //System.out.println("start: " + start);
+    //System.out.println("done: " + done);
+    while (   (done-start) <= 700  ) {
+      if (disstance == 1) {
+        // NOT ON
+        //System.out.println("start: " + start);
+        //System.out.println("done: " + done);
+        end_result=disstance;
+        done = millis();
+      } else {
+        // ON
+        end_result=disstance;
+        done = millis();
+      }
+    }
+    
+    if (end_result == 1 && targets.get(index).action==0) {
+      ERROR_HAPPENED = true;
+    } else if (end_result == 0 && targets.get(index).action==1) {
+      ERROR_HAPPENED = true;
+    }
+    
+    if (ERROR_HAPPENED) {
+      if (trialIndex != 0) trialIndex--;
+    } else {
+      trialIndex++;
+    }
+   
+    phase1=true;
+  }
+}
